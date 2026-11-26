@@ -61,7 +61,8 @@ fun DurakApp() {
                 latest.finishIfNoMoreAttacks()
                 revision++
             }
-        } else if (!current.over && current.actor == 0) {
+        } else if (!current.over && current.actor == 0 && current.actor == current.attacker &&
+            current.table.isNotEmpty() && current.legalMoves(0).none { it is Move.Attack }) {
             current.finishIfNoMoreAttacks()
             revision++
         }
@@ -114,8 +115,8 @@ fun DurakApp() {
                         revision++
                     }
                 },
-                onTake = { state.apply(Move.Take); revision++ },
-                onPass = { state.apply(Move.Pass); revision++ },
+                onTake = { history.add(state.copyState()); state.apply(Move.Take); revision++ },
+                onPass = { history.add(state.copyState()); state.apply(Move.Pass); revision++ },
                 onRestart = { history.clear(); game = GameState.new(opponents + 1); revision++ }
             )
         }
