@@ -344,142 +344,183 @@ private fun GameScreen(
             else -> null
         }
     }.toSet()
-    val orientation = LocalConfiguration.current.orientation
-    val horizontal = orientation == Configuration.ORIENTATION_LANDSCAPE
+    val horizontal = LocalConfiguration.current.orientation == Configuration.ORIENTATION_LANDSCAPE
 
-    Column(
-        Modifier.fillMaxSize().padding(horizontal = 10.dp, vertical = 6.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-            TextButton(onClick = onMenu) { Text("‹ Menu", color = White) }
-            Spacer(Modifier.weight(1f))
-            Text(
-                "Trump: ${state.trump.symbol}",
-                color = White,
-                fontWeight = FontWeight.Bold,
-                modifier = Modifier.background(Color.Black.copy(alpha = .25f), CircleShape)
-                    .padding(horizontal = 14.dp, vertical = 7.dp)
-            )
-        }
+    Box(Modifier.fillMaxSize()) {
+        Column(
+            Modifier.fillMaxSize().padding(horizontal = 8.dp, vertical = 4.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            // Mirrors the compact iOS top bar: menu on the left, trump capsule on the right.
+            Row(Modifier.fillMaxWidth().height(36.dp), verticalAlignment = Alignment.CenterVertically) {
+                TextButton(onClick = onMenu, contentPadding = PaddingValues(horizontal = 8.dp, vertical = 0.dp)) {
+                    Text("‹ Menu", color = White, fontSize = 15.sp)
+                }
+                Spacer(Modifier.weight(1f))
+                Text(
+                    "Trump: ${state.trump.symbol}",
+                    color = White,
+                    fontWeight = FontWeight.SemiBold,
+                    fontSize = 14.sp,
+                    modifier = Modifier.background(Color.Black.copy(alpha = .30f), CircleShape)
+                        .padding(horizontal = 12.dp, vertical = 5.dp)
+                )
+            }
 
-        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
-            (1 until state.hands.size).forEach { player ->
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            // Opponents use the same centered avatar / label / fan / count hierarchy as SwiftUI.
+            Row(
+                Modifier.fillMaxWidth().padding(top = 3.dp),
+                horizontalArrangement = Arrangement.spacedBy(14.dp, Alignment.CenterHorizontally),
+                verticalAlignment = Alignment.Top
+            ) {
+                (1 until state.playerCount).forEach { player ->
                     val out = state.hands[player].isEmpty() && state.deckCount == 0
-                    Box(Modifier.size(46.dp).background(Color.Black.copy(alpha = .35f), CircleShape)
-                        .border(3.dp, if (state.actor == player) Gold else Color.Transparent, CircleShape),
-                        contentAlignment = Alignment.Center) {
-                        Text(if (out) "✓" else "🤖", fontSize = 22.sp)
+                    val active = state.actor == player
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Box(Modifier.size(46.dp), contentAlignment = Alignment.Center) {
+                            Box(Modifier.size(46.dp).background(Color.Black.copy(alpha = .35f), CircleShape))
+                            Text(if (out) "✓" else "🤖", fontSize = 22.sp)
+                            Box(Modifier.size(46.dp).border(
+                                width = if (active) 3.dp else 0.dp,
+                                color = if (active) Gold else Color.Transparent,
+                                shape = CircleShape
+                            ))
+                        }
+                        Text(
+                            "AI $player" + if (state.over) "" else
+                                if (state.attacker == player) " ⚔️" else if (state.defender == player) " 🛡️" else "",
+                            color = White, fontWeight = FontWeight.Bold, fontSize = 11.sp
+                        )
+                        Row(horizontalArrangement = Arrangement.spacedBy((-20).dp)) {
+                            repeat(minOf(state.hands[player].size, 8)) { CardBack(30) }
+                        }
+                        Text("${state.hands[player].size}", color = White.copy(alpha = .85f), fontSize = 10.sp)
                     }
-                    Text(
-                        "AI $player" + if (!state.over && state.actor == player) " · Turn" else
-                            if (!state.over && state.attacker == player) " ⚔️" else
-                            if (!state.over && state.defender == player) " 🛡️" else "",
-                        color = White,
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 12.sp
-                    )
-                    Row(horizontalArrangement = Arrangement.spacedBy((-20).dp)) {
-                        repeat(minOf(state.hands[player].size, 8)) { CardBack(30) }
-                    }
-                    Text("${state.hands[player].size}", color = White.copy(alpha = .85f), fontSize = 10.sp)
                 }
             }
-        }
 
-        Spacer(Modifier.weight(1f))
-        Row(
-            Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.Center
-        ) {
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                if (state.deckCount > 0) {
-                    Box {
+            Spacer(Modifier.weight(1f, fill = true))
+
+            // iOS table: deck at left and compact 3-column pairs at right.
+            Row(
+                Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.Center
+            ) {
+                Box(Modifier.width(96.dp).height(100.dp), contentAlignment = Alignment.Center) {
+                    if (state.deckCount > 0) {
+                        state.faceUpTrump?.let {
+                            PlayingCard(it, 48, false, modifier = Modifier.offset(x = 16.dp).rotate(90f))
+                        }
                         CardBack(48)
-                        state.faceUpTrump?.let { PlayingCard(it, 48, false) }
+                        Text(
+                            "${state.deckCount}", color = White, fontSize = 11.sp, fontWeight = FontWeight.Bold,
+                            modifier = Modifier.align(Alignment.BottomEnd).padding(end = 5.dp)
+                                .background(Color.Black.copy(alpha = .65f), CircleShape).padding(6.dp)
+                        )
+                    } else {
+                        Text(state.trump.symbol, color = White.copy(alpha = .9f), fontSize = 44.sp)
                     }
-                    Text("Deck ${state.deckCount}", color = White, fontSize = 11.sp)
-                } else Text("Deck empty", color = White, fontSize = 11.sp)
-            }
-            Spacer(Modifier.width(12.dp))
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                Text("Table · ${state.table.size}/${state.roundLimit}", color = White, fontWeight = FontWeight.Bold)
-                state.table.chunked(if (horizontal) 5 else 3).forEach { row ->
-                    Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                        row.forEachIndexed { _, pair ->
-                            val index = state.table.indexOf(pair)
-                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                Box(Modifier.width(76.dp).height(105.dp)) {
-                                    PlayingCard(pair.attack, 54, false,
+                }
+                val rows = state.table.chunked(if (horizontal) 4 else 3)
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    rows.forEach { row ->
+                        Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                            row.forEach { pair ->
+                                val index = state.table.indexOf(pair)
+                                Box(Modifier.width(84.dp).height(104.dp), contentAlignment = Alignment.TopStart) {
+                                    PlayingCard(
+                                        pair.attack, 56, false,
                                         onClick = { onChallenge(index) },
-                                        badge = if (pair.cheatedBy != null) "?" else null)
+                                        badge = if (pair.cheatedBy != null) "?" else null
+                                    )
                                     pair.defense?.let {
-                                        Box(Modifier.offset(x = 20.dp, y = 14.dp)) { PlayingCard(it, 54, false) }
+                                        Box(Modifier.offset(x = 16.dp, y = 18.dp).rotate(6f)) {
+                                            PlayingCard(it, 56, false)
+                                        }
                                     }
-                                }
-                                if (pair.transferSide != null) {
-                                    Text(if (pair.transferSide == TransferSide.LEFT) "← Transfer" else "Transfer →",
-                                        color = Gold, fontSize = 9.sp)
                                 }
                             }
                         }
                     }
                 }
-                if (state.table.any { it.cheatedBy != null }) {
-                    Text("Tap a suspicious card (?) to challenge the bot", color = Gold, fontSize = 10.sp)
+            }
+
+            Spacer(Modifier.weight(1f, fill = true))
+
+            Text(
+                if (state.thinkingPlaceholder()) message else when {
+                    state.over && state.durak == 0 -> "You are the Durak 🤡"
+                    state.over && state.durak == null -> "Draw 🤝"
+                    state.over -> "You win! 🎉"
+                    state.actor == 0 -> message
+                    else -> "Bot ${state.actor} is thinking…"
+                },
+                color = White.copy(alpha = .9f), fontSize = 13.sp,
+                textAlign = TextAlign.Center, maxLines = 1
+            )
+            Spacer(Modifier.height(4.dp))
+
+            Row(
+                Modifier.height(40.dp),
+                horizontalArrangement = Arrangement.spacedBy(10.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                IosPill("↩︎ Undo", Color.White.copy(alpha = .85f), onUndo, enabled = canUndo && !state.over)
+                if (!state.over && state.actor == 0 && state.legalMoves(0).contains(Move.Take)) {
+                    IosPill("Take", Color(0xFFFFA726), onTake)
+                }
+                if (!state.over && state.actor == 0 && state.legalMoves(0).contains(Move.Pass)) {
+                    IosPill(if (state.defenderTaking) "Let take" else "Done", Gold, onPass)
+                }
+            }
+
+            HandView(
+                cards = Sorts.mergeSort(state.hands[0]) { state.sortKey(it) },
+                legal = legalCards,
+                enabled = state.actor == 0 && !state.over,
+                landscape = horizontal,
+                onPlay = onSelectCard
+            )
+        }
+
+        // SwiftUI's result overlay is a full-screen dim layer, not a platform AlertDialog.
+        if (state.over) {
+            Box(
+                Modifier.fillMaxSize().background(Color.Black.copy(alpha = .60f)),
+                contentAlignment = Alignment.Center
+            ) {
+                Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                    Text(
+                        if (state.durak == 0) "You are the Durak 🤡" else if (state.durak == null) "Draw 🤝" else "You win! 🎉",
+                        color = White, fontSize = 25.sp, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center
+                    )
+                    if (state.durak != null && state.durak != 0) {
+                        Text("Durak: AI ${state.durak}", color = White.copy(alpha = .85f))
+                    }
+                    IosPill("Play Again", Gold, onRestart)
+                    IosPill("Main Menu", White, onMenu)
                 }
             }
         }
-        Spacer(Modifier.weight(1f))
-
-        Text(
-            when {
-                state.over && state.durak == 0 -> "You are the Durak"
-                state.over && state.durak == null -> "Draw"
-                state.over -> "You win!"
-                state.actor == 0 -> message.ifBlank { "Your turn" }
-                else -> "Bot ${state.actor} is thinking…"
-            },
-            color = White,
-            textAlign = TextAlign.Center,
-            fontSize = 14.sp,
-            maxLines = 2
-        )
-        Spacer(Modifier.height(6.dp))
-
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            OutlinedButton(onClick = onUndo, enabled = canUndo && state.actor == 0) { Text("↶ Undo") }
-            if (!state.over && state.actor == 0 && state.legalMoves(0).contains(Move.Take)) {
-                Button(onClick = onTake, colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFFA726))) {
-                    Text("Take", color = Color.Black)
-                }
-            }
-            if (!state.over && state.actor == 0 && state.legalMoves(0).contains(Move.Pass)) {
-                Button(onClick = onPass, colors = ButtonDefaults.buttonColors(containerColor = Gold, contentColor = Color.Black)) {
-                    Text(if (state.defenderTaking) "Finish attack" else "Done")
-                }
-            }
-            if (state.over) Button(onClick = onRestart, colors = ButtonDefaults.buttonColors(containerColor = Gold, contentColor = Color.Black)) {
-                Text("Play again")
-            }
-        }
-        Spacer(Modifier.height(6.dp))
-                HandView(
-            cards = Sorts.mergeSort(state.hands[0]) { state.sortKey(it) },
-            legal = legalCards,
-            enabled = state.actor == 0 && !state.over,
-            landscape = horizontal,
-            onPlay = onSelectCard
-        )
     }
-    if (state.over) AlertDialog(
-        onDismissRequest = {},
-        title = { Text(if (state.durak == 0) "You are the Durak!" else if (state.durak == null) "Draw" else "You win!") },
-        text = { Text(if (state.durak == null) "The game ended in a draw." else "The game is over.") },
-        confirmButton = { TextButton(onClick = onRestart) { Text("New game") } }
-    )
+}
+
+@Composable
+private fun IosPill(
+    title: String,
+    color: Color,
+    onClick: () -> Unit,
+    enabled: Boolean = true
+) {
+    Box(
+        Modifier.clip(CircleShape).background(color.copy(alpha = if (enabled) 1f else .45f))
+            .clickable(enabled = enabled, onClick = onClick)
+            .padding(horizontal = 18.dp, vertical = 8.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        Text(title, color = Color.Black, fontSize = 14.sp, fontWeight = FontWeight.Bold)
+    }
 }
 
 @Composable
