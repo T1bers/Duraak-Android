@@ -135,9 +135,13 @@ fun DurakApp() {
                     colors = ButtonDefaults.buttonColors(containerColor = Gold, contentColor = Color.Black),
                     modifier = Modifier.width(220.dp).height(56.dp)
                 ) { Text("Play", fontSize = 20.sp, fontWeight = FontWeight.Bold) }
-                TextButton(onClick = { showSettings = true }) { Text("Settings", color = White) }
-                TextButton(onClick = { showBenchmark = true }) { Text("Sorting Test", color = White) }
+                TextButton(onClick = { showBenchmark = true }) { Text("Sorting Test", color = White.copy(alpha = .85f)) }
             }
+            IconButton(
+                onClick = { showInfo = true },
+                modifier = Modifier.align(Alignment.TopEnd).padding(top = 12.dp, end = 18.dp)
+                    .size(50.dp).background(Color.Black.copy(alpha = .18f), CircleShape)
+            ) { Text("ⓘ", color = White, fontSize = 27.sp) }
         } else {
             val state = game!!
             GameScreen(
@@ -355,22 +359,21 @@ private fun GameScreen(
                 modifier = Modifier.background(Color.Black.copy(alpha = .25f), CircleShape)
                     .padding(horizontal = 14.dp, vertical = 7.dp)
             )
-            TextButton(onClick = onSettings) { Text("Settings", color = White) }
         }
 
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
             (1 until state.hands.size).forEach { player ->
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     Text(
-                        if (state.actor == player) "🤖 Bot $player · Turn" else "🤖 Bot $player",
+                        if (state.actor == player) "AI $player ⚔️" else "AI $player",
                         color = if (state.actor == player) Gold else White,
                         fontWeight = FontWeight.Bold,
                         fontSize = 12.sp
                     )
-                    Row(horizontalArrangement = Arrangement.spacedBy((-18).dp)) {
-                        repeat(minOf(state.hands[player].size, if (horizontal) 5 else 7)) { CardBack(28) }
+                    Row(horizontalArrangement = Arrangement.spacedBy((-20).dp)) {
+                        repeat(minOf(state.hands[player].size, 8)) { CardBack(30) }
                     }
-                    Text("${state.hands[player].size} cards", color = White.copy(alpha = .8f), fontSize = 11.sp)
+                    Text("${state.hands[player].size}", color = White.copy(alpha = .85f), fontSize = 10.sp)
                 }
             }
         }
@@ -453,8 +456,7 @@ private fun GameScreen(
             }
         }
         Spacer(Modifier.height(6.dp))
-        Text("Your cards · ${state.hands[0].size}", color = White, fontWeight = FontWeight.Bold)
-        HandView(
+                HandView(
             cards = Sorts.mergeSort(state.hands[0]) { state.sortKey(it) },
             legal = legalCards,
             enabled = state.actor == 0 && !state.over,
