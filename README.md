@@ -1,20 +1,36 @@
-# Durak for Android
+# Durak — Android
 
-Native Android port of the Durak card game.
+Native Android version of the Durak card game, built with Kotlin and Jetpack Compose.
 
-## Features
-- English interface and game rules
-- 2–4 players (you + 1–3 AI opponents)
-- Easy, Medium and Hard AI settings
-- Imperfect-information Monte Carlo opponent simulation
-- Tap a legal card or drag it upward to play
-- Undo, take, finish-round and restart actions
-- Responsive hand layout for portrait and landscape screens
+## Gameplay
+- 2–4 players: you against one to three AI opponents.
+- 36-card deck, six-card hands, trump suit and standard attack/defend rounds.
+- Transfer (perevodnoy) moves: match a rank on the table and pass the attack to the next player when the rules allow it.
+- Bots occasionally attempt a bluff. Tap an un-beaten suspicious table card marked with **?** to challenge it.
+- Easy, Medium and Hard AI settings.
+- Monte Carlo move selection with hidden-card determinization: bots sample unseen cards and do not read opponents' actual hands.
+- Tap a legal card or drag it upward to play it.
+- Undo, take, finish-round and restart controls.
+- Landscape hand layout expands to use the available width when the hand contains more than seven cards.
+
+## Algorithms and data structures
+The project includes custom implementations of:
+- Dynamic array
+- Stack
+- Circular queue
+- Separate-chaining integer hash table
+- Merge sort
+- Counting sort
+- Fisher–Yates shuffle
+
+The main menu includes a benchmark comparing Merge Sort and Counting Sort.
 
 ## Build
-Open this repository in Android Studio, let Gradle sync, then run the `app` configuration on an emulator or Android device.
+1. Open this repository in Android Studio.
+2. Allow Gradle to sync.
+3. Select the `app` run configuration and run it on an Android device or emulator.
 
-The GitHub Actions workflow in `.github/workflows/android-build.yml` builds a debug APK on pushes to `main` and uploads it as the `durak-debug-apk` artifact.
+GitHub Actions builds a debug APK on every push to `main` and uploads it as the `durak-debug-apk` artifact.
 
 ## Developers
 Alan (250444) and Shoxrux (250272).
