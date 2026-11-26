@@ -23,6 +23,7 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -108,8 +109,8 @@ fun DurakApp() {
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center
             ) {
-                Text("Durak", fontSize = 58.sp, fontWeight = FontWeight.Black, color = White)
-                Text("vs Monte Carlo AI", color = White.copy(alpha = .82f), fontSize = 17.sp)
+                Text("Durak", fontSize = 54.sp, fontWeight = FontWeight.Black, fontFamily = FontFamily.Serif, color = White)
+                Text("vs Monte Carlo AI", color = White.copy(alpha = .8f), fontSize = 16.sp)
                 Spacer(Modifier.height(34.dp))
                 Text("Opponents", color = White, fontWeight = FontWeight.Bold)
                 Spacer(Modifier.height(8.dp))
@@ -133,7 +134,7 @@ fun DurakApp() {
                         revision++
                     },
                     colors = ButtonDefaults.buttonColors(containerColor = Gold, contentColor = Color.Black),
-                    modifier = Modifier.width(220.dp).height(56.dp)
+                    modifier = Modifier.width(200.dp).height(52.dp).clip(RoundedCornerShape(26.dp))
                 ) { Text("Play", fontSize = 20.sp, fontWeight = FontWeight.Bold) }
                 TextButton(onClick = { showBenchmark = true }) { Text("Sorting Test", color = White.copy(alpha = .85f)) }
             }
@@ -269,14 +270,15 @@ fun DurakApp() {
 
 @Composable
 private fun ChoiceButton(label: String, selected: Boolean, onClick: () -> Unit) {
-    Button(
-        onClick = onClick,
-        colors = ButtonDefaults.buttonColors(
-            containerColor = if (selected) Gold else Color.Black.copy(alpha = .25f),
-            contentColor = if (selected) Color.Black else White
-        ),
-        contentPadding = PaddingValues(horizontal = 14.dp, vertical = 8.dp)
-    ) { Text(label, fontWeight = FontWeight.Bold) }
+    Box(
+        Modifier.clip(RoundedCornerShape(8.dp))
+            .background(if (selected) Gold else Color.Black.copy(alpha = .24f))
+            .clickable(onClick = onClick)
+            .padding(horizontal = 16.dp, vertical = 9.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        Text(label, color = if (selected) Color.Black else White, fontWeight = FontWeight.SemiBold)
+    }
 }
 
 @Composable
@@ -364,9 +366,17 @@ private fun GameScreen(
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
             (1 until state.hands.size).forEach { player ->
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    val out = state.hands[player].isEmpty() && state.deckCount == 0
+                    Box(Modifier.size(46.dp).background(Color.Black.copy(alpha = .35f), CircleShape)
+                        .border(3.dp, if (state.actor == player) Gold else Color.Transparent, CircleShape),
+                        contentAlignment = Alignment.Center) {
+                        Text(if (out) "✓" else "🤖", fontSize = 22.sp)
+                    }
                     Text(
-                        if (state.actor == player) "AI $player ⚔️" else "AI $player",
-                        color = if (state.actor == player) Gold else White,
+                        "AI $player" + if (!state.over && state.actor == player) " · Turn" else
+                            if (!state.over && state.attacker == player) " ⚔️" else
+                            if (!state.over && state.defender == player) " 🛡️" else "",
+                        color = White,
                         fontWeight = FontWeight.Bold,
                         fontSize = 12.sp
                     )
