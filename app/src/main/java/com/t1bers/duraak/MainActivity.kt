@@ -44,10 +44,12 @@ fun DurakApp() {
     var revision by remember { mutableIntStateOf(0) }
     var showSettings by remember { mutableStateOf(false) }
     var showInfo by remember { mutableStateOf(false) }
+    var showBenchmark by remember { mutableStateOf(false) }
+    var benchmarkText by remember { mutableStateOf("Running benchmark…") }
     val history = remember { mutableStateListOf<GameState>() }
     val budget = listOf(20, 55, 110)[difficulty]
 
-    LaunchedEffect(revision, game?.actor, game?.over) {
+    LaunchedEffect(showBenchmark) {\n        if (showBenchmark) benchmarkText = withContext(Dispatchers.Default) { AlgorithmBenchmark.run() }\n    }\n\n    LaunchedEffect(revision, game?.actor, game?.over) {
         val current = game ?: return@LaunchedEffect
         if (!current.over && current.actor != 0) {
             val player = current.actor
@@ -93,7 +95,7 @@ fun DurakApp() {
                     modifier = Modifier.width(220.dp).height(56.dp)) {
                     Text("Play", fontSize = 20.sp, fontWeight = FontWeight.Bold)
                 }
-                TextButton(onClick = { showSettings = true }) { Text("Settings", color = White) }
+                TextButton(onClick = { showSettings = true }) { Text("Settings", color = White) }\n                TextButton(onClick = { showBenchmark = true }) { Text("Sorting Test", color = White) }
             }
         } else {
             val state = game!!
@@ -126,7 +128,7 @@ fun DurakApp() {
         text = { TextButton(onClick = { showSettings = false; showInfo = true }) { Text("Info & How to Play") } },
         confirmButton = { TextButton(onClick = { showSettings = false }) { Text("Close") } }
     )
-    if (showInfo) InfoDialog { showInfo = false }
+    if (showInfo) InfoDialog { showInfo = false }\n    if (showBenchmark) AlertDialog(onDismissRequest = { showBenchmark = false },\n        title = { Text("Merge Sort vs Counting Sort") },\n        text = { Text(benchmarkText) },\n        confirmButton = { TextButton(onClick = { showBenchmark = false }) { Text("Close") } })
 }
 
 @Composable
@@ -247,7 +249,7 @@ private fun GameScreen(
         }
         Spacer(Modifier.height(8.dp))
         Text("Your cards · ${state.hands[0].size}", color = White, fontWeight = FontWeight.Bold)
-        HandView(state.hands[0].sortedWith(compareBy<Card> { if (it.suit == state.trump) 4 else it.suit.ordinal }.thenBy { it.rank }),
+        HandView(Sorts.mergeSort(state.hands[0]) { (if (it.suit == state.trump) 4 else it.suit.ordinal) * 20 + it.rank },
             legal, state.actor == 0 && !state.over, onPlay)
     }
     if (state.over) AlertDialog(onDismissRequest = {}, title = {
