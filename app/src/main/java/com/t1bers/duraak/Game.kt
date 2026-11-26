@@ -44,7 +44,7 @@ class GameState private constructor(
         undefendedCount > 0 -> defender
         else -> attacker
     }
-    val deckCount: Int get() = deck.size + 1 // face-up trump card is drawn last
+    val deckCount: Int get() = deck.size + if (trumpCardAvailable) 1 else 0\n    val faceUpTrump: Card? get() = if (trumpCardAvailable) Card(trumpCardId) else null
 
     fun beats(card: Card, attack: Card): Boolean =
         if (card.suit == attack.suit) card.rank > attack.rank
@@ -190,7 +190,7 @@ object MonteCarloAI {
         val unseen = (0 until 36).map(::Card).filter { candidate ->
             state.hands[player].none { it.id == candidate.id } &&
                 state.table.none { it.attack.id == candidate.id || it.defense?.id == candidate.id } &&
-                state.discard.none { it.id == candidate.id }
+                state.discard.none { it.id == candidate.id } &&\n                state.faceUpTrump?.id != candidate.id
         }.toMutableList()
         val wins = DoubleArray(moves.size)
         val trials = budget.coerceIn(12, 240)
