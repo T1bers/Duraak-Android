@@ -49,7 +49,11 @@ fun DurakApp() {
     val history = remember { mutableStateListOf<GameState>() }
     val budget = listOf(20, 55, 110)[difficulty]
 
-    LaunchedEffect(showBenchmark) {\n        if (showBenchmark) benchmarkText = withContext(Dispatchers.Default) { AlgorithmBenchmark.run() }\n    }\n\n    LaunchedEffect(revision, game?.actor, game?.over) {
+    LaunchedEffect(showBenchmark) {
+        if (showBenchmark) benchmarkText = withContext(Dispatchers.Default) { AlgorithmBenchmark.run() }
+    }
+
+    LaunchedEffect(revision, game?.actor, game?.over) {
         val current = game ?: return@LaunchedEffect
         if (!current.over && current.actor != 0) {
             val player = current.actor
@@ -95,7 +99,8 @@ fun DurakApp() {
                     modifier = Modifier.width(220.dp).height(56.dp)) {
                     Text("Play", fontSize = 20.sp, fontWeight = FontWeight.Bold)
                 }
-                TextButton(onClick = { showSettings = true }) { Text("Settings", color = White) }\n                TextButton(onClick = { showBenchmark = true }) { Text("Sorting Test", color = White) }
+                TextButton(onClick = { showSettings = true }) { Text("Settings", color = White) }
+                TextButton(onClick = { showBenchmark = true }) { Text("Sorting Test", color = White) }
             }
         } else {
             val state = game!!
@@ -128,7 +133,11 @@ fun DurakApp() {
         text = { TextButton(onClick = { showSettings = false; showInfo = true }) { Text("Info & How to Play") } },
         confirmButton = { TextButton(onClick = { showSettings = false }) { Text("Close") } }
     )
-    if (showInfo) InfoDialog { showInfo = false }\n    if (showBenchmark) AlertDialog(onDismissRequest = { showBenchmark = false },\n        title = { Text("Merge Sort vs Counting Sort") },\n        text = { Text(benchmarkText) },\n        confirmButton = { TextButton(onClick = { showBenchmark = false }) { Text("Close") } })
+    if (showInfo) InfoDialog { showInfo = false }
+    if (showBenchmark) AlertDialog(onDismissRequest = { showBenchmark = false },
+        title = { Text("Merge Sort vs Counting Sort") },
+        text = { Text(benchmarkText) },
+        confirmButton = { TextButton(onClick = { showBenchmark = false }) { Text("Close") } })
 }
 
 @Composable
