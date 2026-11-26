@@ -17,6 +17,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
@@ -410,7 +411,7 @@ private fun GameScreen(
                 Box(Modifier.width(96.dp).height(100.dp), contentAlignment = Alignment.Center) {
                     if (state.deckCount > 0) {
                         state.faceUpTrump?.let {
-                            PlayingCard(it, 48, false, modifier = Modifier.offset(x = 16.dp).rotate(90f))
+                            PlayingCard(it, 48, false, modifier = Modifier.offset(x = 16.dp).graphicsLayer { rotationZ = 90f })
                         }
                         CardBack(48)
                         Text(
@@ -435,7 +436,7 @@ private fun GameScreen(
                                         badge = if (pair.cheatedBy != null) "?" else null
                                     )
                                     pair.defense?.let {
-                                        Box(Modifier.offset(x = 16.dp, y = 18.dp).rotate(6f)) {
+                                        Box(Modifier.offset(x = 16.dp, y = 18.dp).graphicsLayer { rotationZ = 6f }) {
                                             PlayingCard(it, 56, false)
                                         }
                                     }
@@ -449,7 +450,7 @@ private fun GameScreen(
             Spacer(Modifier.weight(1f, fill = true))
 
             Text(
-                if (state.thinkingPlaceholder()) message else when {
+                when {
                     state.over && state.durak == 0 -> "You are the Durak 🤡"
                     state.over && state.durak == null -> "Draw 🤝"
                     state.over -> "You win! 🎉"
@@ -567,14 +568,15 @@ private fun PlayingCard(
     enabled: Boolean,
     onClick: () -> Unit = {},
     onDragPlay: () -> Unit = onClick,
-    badge: String? = null
+    badge: String? = null,
+    modifier: Modifier = Modifier
 ) {
     val ink = if (card.suit.isRed) Color(0xFFD21F2B) else Color(0xFF171717)
     var dragX by remember(card.id) { mutableFloatStateOf(0f) }
     var dragY by remember(card.id) { mutableFloatStateOf(0f) }
 
     Box(
-        Modifier.width(width.dp).height((width * 1.45f).dp)
+        modifier.width(width.dp).height((width * 1.45f).dp)
             .clip(RoundedCornerShape(7.dp))
             .background(Color.White)
             .border(1.dp, Color.Black.copy(alpha = .35f), RoundedCornerShape(7.dp))
