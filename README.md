@@ -1,27 +1,20 @@
-# Дурак — Android
+# Durak for Android
 
-Готовый исходный Android Studio проект на Kotlin + Jetpack Compose.
+Native Android port of the Durak card game.
 
-## Сборка APK
-1. Откройте папку проекта в Android Studio.
-2. Дождитесь Gradle Sync.
-3. Выберите **Build → Build Bundle(s) / APK(s) → Build APK(s)**.
+## Features
+- English interface and game rules
+- 2–4 players (you + 1–3 AI opponents)
+- Easy, Medium and Hard AI settings
+- Imperfect-information Monte Carlo opponent simulation
+- Tap a legal card or drag it upward to play
+- Undo, take, finish-round and restart actions
+- Responsive hand layout for portrait and landscape screens
 
-Или из терминала в корне проекта:
-`gradle assembleDebug`
+## Build
+Open this repository in Android Studio, let Gradle sync, then run the `app` configuration on an emulator or Android device.
 
-Готовый файл будет здесь:
-`app/build/outputs/apk/debug/app-debug.apk`
+The GitHub Actions workflow in `.github/workflows/android-build.yml` builds a debug APK on pushes to `main` and uploads it as the `durak-debug-apk` artifact.
 
-## Автоматическая сборка
-Workflow `.github/workflows/android.yml` собирает APK после публикации файлов в ветку `main`.
-В GitHub откройте **Actions → Build Android APK**, дождитесь зелёной галочки и скачайте artifact `Duraak-debug-apk`.
-
-## Что внутри
-- Колода 36 карт, 2–4 игрока.
-- Козырь, атака, защита, взятие и подкидывание по достоинству карты.
-- Добор до шести карт и завершение партии.
-- Зелёный игровой стол, карты и меню выбора соперников.
-- Автоматические ходы соперников.
-
-Примечание: это Android-порт игровой логики и интерфейса. Искусственный интеллект пока использует эвристический выбор ходов; исходный Monte Carlo AI из Swift-проекта ещё не перенесён полностью. Перед публикацией в Google Play рекомендуется полноценное тестирование на устройствах.
+## Developers
+Alan (250444) and Shoxrux (250272).
