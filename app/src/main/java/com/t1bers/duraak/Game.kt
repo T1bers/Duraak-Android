@@ -114,11 +114,12 @@ class GameState private constructor(
             }
         } else {
             table.forEach { pair ->
-                discard.add(pair.attack)
-                pair.defense?.let { discard.add(it) }
+                discard.push(pair.attack)
+                pair.defense?.let { discard.push(it) }
             }
         }
         table.clear()
+        tableRanks.clear()
         defenderTaking = false
 
         // The face-up trump is kept separately and drawn only after the hidden deck is empty.
