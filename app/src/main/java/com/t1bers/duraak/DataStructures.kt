@@ -132,7 +132,7 @@ class IntHashTable(initialCapacity: Int = 16) {
     var size: Int = 0
         private set
 
-    private fun slot(key: Int): Int = (key * 0x9E3779B9).ushr(1) % buckets.size
+    private fun slot(key: Int): Int = (key * -1640531527).ushr(1) % buckets.size
 
     fun get(key: Int): Int? = buckets[slot(key)].firstOrNull { it.key == key }?.value
     fun contains(key: Int): Boolean = get(key) != null
