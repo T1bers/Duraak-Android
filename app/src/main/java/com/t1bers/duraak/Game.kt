@@ -30,7 +30,7 @@ class GameState private constructor(
     val order: MutableList<Int>,
     val table: MutableList<TablePair> = mutableListOf(),
     val discard: Stack<Card> = Stack(),
-    private val tableRanks = IntHashTable()\n    var defenderTaking: Boolean = false,
+    var defenderTaking: Boolean = false,
     var roundLimit: Int = 6,
     var over: Boolean = false,
     var durak: Int? = null
