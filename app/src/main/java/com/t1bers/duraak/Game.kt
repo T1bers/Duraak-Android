@@ -29,8 +29,8 @@ class GameState private constructor(
     val trump: Suit,
     val order: MutableList<Int>,
     val table: MutableList<TablePair> = mutableListOf(),
-    val discard: MutableList<Card> = mutableListOf(),
-    var defenderTaking: Boolean = false,
+    val discard: Stack<Card> = Stack(),
+    private val tableRanks = IntHashTable()\n    var defenderTaking: Boolean = false,
     var roundLimit: Int = 6,
     var over: Boolean = false,
     var durak: Int? = null
@@ -62,8 +62,7 @@ class GameState private constructor(
             val cards = if (table.isEmpty()) hands[player].toList() else {
                 if (table.size >= roundLimit) emptyList()
                 else {
-                    val ranks = table.flatMap { listOfNotNull(it.attack.rank, it.defense?.rank) }.toSet()
-                    hands[player].filter { it.rank in ranks }
+                    hands[player].filter { tableRanks.contains(it.rank) }
                 }
             }
             return cards.map { Move.Attack(it) } + if (table.isEmpty()) emptyList() else listOf(Move.Pass)
@@ -79,12 +78,14 @@ class GameState private constructor(
                     legalMoves(attacker).none { it == move }) return
                 hands[attacker].remove(move.card)
                 table.add(TablePair(move.card))
+                tableRanks.increment(move.card.rank)
             }
             is Move.Defend -> {
                 if (actor != defender || move.card !in hands[defender] ||
                     legalMoves(defender).none { it == move }) return
                 hands[defender].remove(move.card)
                 table[move.tableIndex] = table[move.tableIndex].copy(defense = move.card)
+                tableRanks.increment(move.card.rank)
             }
             Move.Take -> {
                 if (actor == defender && legalMoves(defender).contains(Move.Take)) defenderTaking = true
@@ -151,12 +152,20 @@ class GameState private constructor(
     private var trumpCardAvailable: Boolean = true
 
     fun copyState(): GameState {
+        val copiedHands: MutableList<MutableList<Card>> = hands.mapTo(mutableListOf()) {
+            DynamicArray<Card>().apply { addAll(it) }
+        }
+        val copiedDeck: MutableList<Card> = DynamicArray<Card>().apply { addAll(deck) }
+        val copiedDiscard = Stack<Card>().apply { discard.toList().forEach(::push) }
         val copy = GameState(
-            hands.map { it.toMutableList() }.toMutableList(),
-            deck.toMutableList(), trump, order.toMutableList(),
-            table.toMutableList(), discard.toMutableList(),
+            copiedHands, copiedDeck, trump, order.toMutableList(),
+            table.toMutableList(), copiedDiscard,
             defenderTaking, roundLimit, over, durak
         )
+        table.forEach { pair ->
+            copy.tableRanks.increment(pair.attack.rank)
+            pair.defense?.let { copy.tableRanks.increment(it.rank) }
+        }
         copy.trumpCardId = trumpCardId
         copy.trumpCardAvailable = trumpCardAvailable
         return copy
@@ -165,18 +174,22 @@ class GameState private constructor(
     companion object {
         fun new(players: Int): GameState {
             require(players in 2..4)
-            val shuffled = (0 until 36).map(::Card).shuffled().toMutableList()
+            val shuffled = (0 until 36).map(::Card).toMutableList()
+            Sorts.fisherYates(shuffled)
             val trumpCard = shuffled.removeAt(0)
             val trump = trumpCard.suit
-            val hands = MutableList(players) { mutableListOf<Card>() }
+            val hands: MutableList<MutableList<Card>> = MutableList(players) { DynamicArray<Card>() }
             repeat(6) { for (p in 0 until players) hands[p].add(shuffled.removeAt(shuffled.lastIndex)) }
+            val drawPile: MutableList<Card> = DynamicArray<Card>().apply { addAll(shuffled) }
             var first = -1
             var best = Int.MAX_VALUE
             for (p in 0 until players) for (card in hands[p]) {
                 if (card.suit == trump && card.rank < best) { best = card.rank; first = p }
             }
             if (first < 0) first = Random.nextInt(players)
-            return GameState(hands, shuffled, trump, MutableList(players) { (first + it) % players }).also {
+            val turnQueue = CircularQueue<Int>(players)
+            for (k in 0 until players) turnQueue.enqueue((first + k) % players)
+            return GameState(hands, drawPile, trump, turnQueue.toList().toMutableList()).also {
                 it.trumpCardId = trumpCard.id
             }
         }
@@ -191,7 +204,7 @@ object MonteCarloAI {
         val unseen = (0 until 36).map(::Card).filter { candidate ->
             state.hands[player].none { it.id == candidate.id } &&
                 state.table.none { it.attack.id == candidate.id || it.defense?.id == candidate.id } &&
-                state.discard.none { it.id == candidate.id } &&
+                state.discard.toList().none { it.id == candidate.id } &&
                 state.faceUpTrump?.id != candidate.id
         }.toMutableList()
         val wins = DoubleArray(moves.size)
