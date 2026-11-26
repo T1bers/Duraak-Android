@@ -35,6 +35,7 @@ class GameState private constructor(
     var over: Boolean = false,
     var durak: Int? = null
 ) {
+    private val tableRanks = IntHashTable()
     val attacker: Int get() = order.first()
     val defender: Int get() = order[1]
     val undefendedCount: Int get() = table.count { it.defense == null }
